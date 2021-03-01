@@ -6,7 +6,7 @@ import {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
-	ITriggerResponse,
+	ITriggerResponse
 } from 'n8n-workflow';
 
 import {
@@ -14,12 +14,9 @@ import {
 	getParts,
 	ImapSimple,
 	ImapSimpleOptions,
-	Message,
+	Message
 } from 'imap-simple';
-import {
-	simpleParser,
-	Source as ParserSource,
-} from 'mailparser';
+import { simpleParser, Source as ParserSource } from 'mailparser';
 
 import * as lodash from 'lodash';
 
@@ -33,22 +30,22 @@ export class EmailReadImap implements INodeType {
 		description: 'Triggers the workflow when a new email gets received',
 		defaults: {
 			name: 'IMAP Email',
-			color: '#44AA22',
+			color: '#44AA22'
 		},
 		inputs: [],
 		outputs: ['main'],
 		credentials: [
 			{
 				name: 'imap',
-				required: true,
-			},
+				required: true
+			}
 		],
 		properties: [
 			{
 				displayName: 'Mailbox Name',
 				name: 'mailbox',
 				type: 'string',
-				default: 'INBOX',
+				default: 'INBOX'
 			},
 			{
 				displayName: 'Action',
@@ -57,15 +54,16 @@ export class EmailReadImap implements INodeType {
 				options: [
 					{
 						name: 'Mark as read',
-						value: 'read',
+						value: 'read'
 					},
 					{
 						name: 'Nothing',
-						value: 'nothing',
-					},
+						value: 'nothing'
+					}
 				],
 				default: 'read',
-				description: 'What to do after the email has been received. If "nothing" gets<br />selected it will be processed multiple times.',
+				description:
+					'What to do after the email has been received. If "nothing" gets<br />selected it will be processed multiple times.'
 			},
 			{
 				displayName: 'Download Attachments',
@@ -74,12 +72,11 @@ export class EmailReadImap implements INodeType {
 				default: false,
 				displayOptions: {
 					show: {
-						format: [
-							'simple',
-						],
-					},
+						format: ['simple']
+					}
 				},
-				description: 'If attachments of emails should be downloaded.<br />Only set if needed as it increases processing.',
+				description:
+					'If attachments of emails should be downloaded.<br />Only set if needed as it increases processing.'
 			},
 			{
 				displayName: 'Format',
@@ -89,21 +86,24 @@ export class EmailReadImap implements INodeType {
 					{
 						name: 'RAW',
 						value: 'raw',
-						description: 'Returns the full email message data with body content in the raw field as a base64url encoded string; the payload field is not used.',
+						description:
+							'Returns the full email message data with body content in the raw field as a base64url encoded string; the payload field is not used.'
 					},
 					{
 						name: 'Resolved',
 						value: 'resolved',
-						description: 'Returns the full email with all data resolved and attachments saved as binary data.',
+						description:
+							'Returns the full email with all data resolved and attachments saved as binary data.'
 					},
 					{
 						name: 'Simple',
 						value: 'simple',
-						description: 'Returns the full email; do not use if you wish to gather inline attachments.',
-					},
+						description:
+							'Returns the full email; do not use if you wish to gather inline attachments.'
+					}
 				],
 				default: 'simple',
-				description: 'The format to return the message in',
+				description: 'The format to return the message in'
 			},
 			{
 				displayName: 'Property Prefix Name',
@@ -112,12 +112,11 @@ export class EmailReadImap implements INodeType {
 				default: 'attachment_',
 				displayOptions: {
 					show: {
-						format: [
-							'resolved',
-						],
-					},
+						format: ['resolved']
+					}
 				},
-				description: 'Prefix for name of the binary property to which to<br />write the attachments. An index starting with 0 will be added.<br />So if name is "attachment_" the first attachment is saved to "attachment_0"',
+				description:
+					'Prefix for name of the binary property to which to<br />write the attachments. An index starting with 0 will be added.<br />So if name is "attachment_" the first attachment is saved to "attachment_0"'
 			},
 			{
 				displayName: 'Property Prefix Name',
@@ -126,15 +125,12 @@ export class EmailReadImap implements INodeType {
 				default: 'attachment_',
 				displayOptions: {
 					show: {
-						format: [
-							'simple',
-						],
-						downloadAttachments: [
-							true,
-						],
-					},
+						format: ['simple'],
+						downloadAttachments: [true]
+					}
 				},
-				description: 'Prefix for name of the binary property to which to<br />write the attachments. An index starting with 0 will be added.<br />So if name is "attachment_" the first attachment is saved to "attachment_0"',
+				description:
+					'Prefix for name of the binary property to which to<br />write the attachments. An index starting with 0 will be added.<br />So if name is "attachment_" the first attachment is saved to "attachment_0"'
 			},
 			{
 				displayName: 'Options',
@@ -148,21 +144,21 @@ export class EmailReadImap implements INodeType {
 						name: 'customEmailConfig',
 						type: 'string',
 						default: '["UNSEEN"]',
-						description: 'Custom email fetching rules. See <a href="https://github.com/mscdex/node-imap">node-imap</a>\'s search function for more details',
+						description:
+							'Custom email fetching rules. See <a href="https://github.com/mscdex/node-imap">node-imap</a>\'s search function for more details'
 					},
 					{
 						displayName: 'Ignore SSL Issues',
 						name: 'allowUnauthorizedCerts',
 						type: 'boolean',
 						default: false,
-						description: 'Do connect even if SSL certificate validation is not possible.',
-					},
-				],
-			},
-		],
+						description:
+							'Do connect even if SSL certificate validation is not possible.'
+					}
+				]
+			}
+		]
 	};
-
-
 
 	async trigger(this: ITriggerFunctions): Promise<ITriggerResponse> {
 		const credentials = this.getCredentials('imap');
@@ -172,12 +168,12 @@ export class EmailReadImap implements INodeType {
 		}
 
 		const mailbox = this.getNodeParameter('mailbox') as string;
-		const postProcessAction = this.getNodeParameter('postProcessAction') as string;
+		const postProcessAction = this.getNodeParameter(
+			'postProcessAction'
+		) as string;
 		const options = this.getNodeParameter('options', {}) as IDataObject;
 
-		let searchCriteria = [
-			'UNSEEN',
-		];
+		let searchCriteria = ['UNSEEN'];
 		if (options.customEmailConfig !== undefined) {
 			try {
 				searchCriteria = JSON.parse(options.customEmailConfig as string);
@@ -187,45 +183,60 @@ export class EmailReadImap implements INodeType {
 		}
 
 		// Returns the email text
-		const getText = async (parts: any[], message: Message, subtype: string) => { // tslint:disable-line:no-any
+		const getText = async (parts: any[], message: Message, subtype: string) => {
+			// tslint:disable-line:no-any
 			if (!message.attributes.struct) {
 				return '';
 			}
 
-			const textParts = parts.filter((part) => {
-				return part.type.toUpperCase() === 'TEXT' && part.subtype.toUpperCase() === subtype.toUpperCase();
+			const textParts = parts.filter(part => {
+				return (
+					part.type.toUpperCase() === 'TEXT' &&
+					part.subtype.toUpperCase() === subtype.toUpperCase()
+				);
 			});
 
 			if (textParts.length === 0) {
 				return '';
 			}
 
-			try{
+			try {
 				return await connection.getPartData(message, textParts[0]);
 			} catch {
 				return '';
 			}
 		};
 
-
 		// Returns the email attachments
-		const getAttachment = async (connection: ImapSimple, parts: any[], message: Message): Promise<IBinaryData[]> => { // tslint:disable-line:no-any
+		const getAttachment = async (
+			connection: ImapSimple,
+			parts: any[],
+			message: Message
+		): Promise<IBinaryData[]> => {
+			// tslint:disable-line:no-any
 			if (!message.attributes.struct) {
 				return [];
 			}
 
 			// Check if the message has attachments and if so get them
-			const attachmentParts = parts.filter((part) => {
-				return part.disposition && part.disposition.type.toUpperCase() === 'ATTACHMENT';
+			const attachmentParts = parts.filter(part => {
+				return (
+					part.disposition &&
+					part.disposition.type.toUpperCase() === 'ATTACHMENT'
+				);
 			});
 
 			const attachmentPromises = [];
 			let attachmentPromise;
 			for (const attachmentPart of attachmentParts) {
-				attachmentPromise = connection.getPartData(message, attachmentPart)
-					.then((partData) => {
+				attachmentPromise = connection
+					.getPartData(message, attachmentPart)
+					.then(partData => {
 						// Return it in the format n8n expects
-						return this.helpers.prepareBinaryData(partData, attachmentPart.disposition.params.filename);
+						return this.helpers.prepareBinaryData(
+							partData,
+							attachmentPart.disposition.params.filename
+						);
 					});
 
 				attachmentPromises.push(attachmentPromise);
@@ -234,9 +245,11 @@ export class EmailReadImap implements INodeType {
 			return Promise.all(attachmentPromises);
 		};
 
-
 		// Returns all the new unseen messages
-		const getNewEmails = async (connection: ImapSimple, searchCriteria: string[]): Promise<INodeExecutionData[]> => {
+		const getNewEmails = async (
+			connection: ImapSimple,
+			searchCriteria: string[]
+		): Promise<INodeExecutionData[]> => {
 			const format = this.getNodeParameter('format', 0) as string;
 
 			let fetchOptions = {};
@@ -245,13 +258,13 @@ export class EmailReadImap implements INodeType {
 				fetchOptions = {
 					bodies: ['TEXT', 'HEADER'],
 					markSeen: postProcessAction === 'read',
-					struct: true,
+					struct: true
 				};
 			} else if (format === 'resolved') {
 				fetchOptions = {
 					bodies: [''],
 					markSeen: postProcessAction === 'read',
-					struct: true,
+					struct: true
 				};
 			}
 
@@ -264,16 +277,12 @@ export class EmailReadImap implements INodeType {
 
 			// All properties get by default moved to metadata except the ones
 			// which are defined here which get set on the top level.
-			const topLevelProperties = [
-				'cc',
-				'date',
-				'from',
-				'subject',
-				'to',
-			];
+			const topLevelProperties = ['cc', 'date', 'from', 'subject', 'to'];
 
 			if (format === 'resolved') {
-				const dataPropertyAttachmentsPrefixName = this.getNodeParameter('dataPropertyAttachmentsPrefixName') as string;
+				const dataPropertyAttachmentsPrefixName = this.getNodeParameter(
+					'dataPropertyAttachmentsPrefixName'
+				) as string;
 
 				for (const message of results) {
 					const part = lodash.find(message.parts, { which: '' });
@@ -281,16 +290,24 @@ export class EmailReadImap implements INodeType {
 					if (part === undefined) {
 						throw new Error('Email part could not be parsed.');
 					}
-					const parsedEmail = await parseRawEmail.call(this, part.body, dataPropertyAttachmentsPrefixName);
+					const parsedEmail = await parseRawEmail.call(
+						this,
+						part.body,
+						dataPropertyAttachmentsPrefixName
+					);
 
 					newEmails.push(parsedEmail);
 				}
 			} else if (format === 'simple') {
-				const downloadAttachments = this.getNodeParameter('downloadAttachments') as boolean;
+				const downloadAttachments = this.getNodeParameter(
+					'downloadAttachments'
+				) as boolean;
 
 				let dataPropertyAttachmentsPrefixName = '';
 				if (downloadAttachments === true) {
-					dataPropertyAttachmentsPrefixName = this.getNodeParameter('dataPropertyAttachmentsPrefixName') as string;
+					dataPropertyAttachmentsPrefixName = this.getNodeParameter(
+						'dataPropertyAttachmentsPrefixName'
+					) as string;
 				}
 
 				for (const message of results) {
@@ -300,11 +317,11 @@ export class EmailReadImap implements INodeType {
 						json: {
 							textHtml: await getText(parts, message, 'html'),
 							textPlain: await getText(parts, message, 'plain'),
-							metadata: {} as IDataObject,
-						},
+							metadata: {} as IDataObject
+						}
 					};
 
-					messageHeader = message.parts.filter((part) => {
+					messageHeader = message.parts.filter(part => {
 						return part.which === 'HEADER';
 					});
 
@@ -314,7 +331,8 @@ export class EmailReadImap implements INodeType {
 							if (topLevelProperties.includes(propertyName)) {
 								newEmail.json[propertyName] = messageBody[propertyName][0];
 							} else {
-								(newEmail.json.metadata as IDataObject)[propertyName] = messageBody[propertyName][0];
+								(newEmail.json.metadata as IDataObject)[propertyName] =
+									messageBody[propertyName][0];
 							}
 						}
 					}
@@ -325,7 +343,8 @@ export class EmailReadImap implements INodeType {
 						if (attachments.length) {
 							newEmail.binary = {};
 							for (let i = 0; i < attachments.length; i++) {
-								newEmail.binary[`${dataPropertyAttachmentsPrefixName}${i}`] = attachments[i];
+								newEmail.binary[`${dataPropertyAttachmentsPrefixName}${i}`] =
+									attachments[i];
 							}
 						}
 					}
@@ -342,8 +361,8 @@ export class EmailReadImap implements INodeType {
 					// Return base64 string
 					newEmail = {
 						json: {
-							raw: part.body,
-						},
+							raw: part.body
+						}
 					};
 
 					newEmails.push(newEmail);
@@ -353,35 +372,49 @@ export class EmailReadImap implements INodeType {
 			return newEmails;
 		};
 
-		let connection: ImapSimple;
+		const establishConnection = (): Promise<ImapSimple> => {
+			const config: ImapSimpleOptions = {
+				imap: {
+					user: credentials.user as string,
+					password: credentials.password as string,
+					host: credentials.host as string,
+					port: credentials.port as number,
+					tls: credentials.secure as boolean,
+					authTimeout: 20000
+				},
+				onmail: async () => {
+					if (connection) {
+						const returnData = await getNewEmails(connection, searchCriteria);
 
-		const config: ImapSimpleOptions = {
-			imap: {
-				user: credentials.user as string,
-				password: credentials.password as string,
-				host: credentials.host as string,
-				port: credentials.port as number,
-				tls: credentials.secure as boolean,
-				authTimeout: 20000,
-			},
-			onmail: async () => {
-				const returnData = await getNewEmails(connection, searchCriteria);
-
-				if (returnData.length) {
-					this.emit([returnData]);
+						if (returnData.length) {
+							this.emit([returnData]);
+						}
+					}
 				}
-			},
+			};
+
+			if (options.allowUnauthorizedCerts === true) {
+				config.imap.tlsOptions = {
+					rejectUnauthorized: false
+				};
+			}
+
+			// Connect to the IMAP server and open the mailbox
+			// that we get informed whenever a new email arrives
+			return imapConnect(config).then(async conn => {
+				conn.on('error', async err => {
+					if (err.code.toUpperCase() === 'ECONNRESET') {
+						connection = await establishConnection();
+					}
+					throw err;
+				});
+				return conn;
+			});
 		};
 
-		if (options.allowUnauthorizedCerts === true) {
-			config.imap.tlsOptions = {
-				rejectUnauthorized: false,
-			};
-		}
+		let connection: ImapSimple = await establishConnection();
 
-		// Connect to the IMAP server and open the mailbox
-		// that we get informed whenever a new email arrives
-		connection = await imapConnect(config);
+		//make sure we can opent the mail box
 		await connection.openBox(mailbox);
 
 		// When workflow and so node gets set to inactive close the connectoin
@@ -390,13 +423,16 @@ export class EmailReadImap implements INodeType {
 		}
 
 		return {
-			closeFunction,
+			closeFunction
 		};
-
 	}
 }
 
-export async function parseRawEmail(this: ITriggerFunctions, messageEncoded: ParserSource, dataPropertyNameDownload: string): Promise<INodeExecutionData> {
+export async function parseRawEmail(
+	this: ITriggerFunctions,
+	messageEncoded: ParserSource,
+	dataPropertyNameDownload: string
+): Promise<INodeExecutionData> {
 	const responseData = await simpleParser(messageEncoded);
 	const headers: IDataObject = {};
 	for (const header of responseData.headerLines) {
@@ -410,17 +446,22 @@ export async function parseRawEmail(this: ITriggerFunctions, messageEncoded: Par
 
 	const binaryData: IBinaryKeyData = {};
 	if (responseData.attachments) {
-
 		for (let i = 0; i < responseData.attachments.length; i++) {
 			const attachment = responseData.attachments[i];
-			binaryData[`${dataPropertyNameDownload}${i}`] = await this.helpers.prepareBinaryData(attachment.content, attachment.filename, attachment.contentType);
+			binaryData[
+				`${dataPropertyNameDownload}${i}`
+			] = await this.helpers.prepareBinaryData(
+				attachment.content,
+				attachment.filename,
+				attachment.contentType
+			);
 		}
 		// @ts-ignore
 		responseData.attachments = undefined;
 	}
 
 	return {
-		json: responseData as unknown as IDataObject,
-		binary: Object.keys(binaryData).length ? binaryData : undefined,
+		json: (responseData as unknown) as IDataObject,
+		binary: Object.keys(binaryData).length ? binaryData : undefined
 	} as INodeExecutionData;
 }
